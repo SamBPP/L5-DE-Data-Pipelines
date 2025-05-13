@@ -1,0 +1,99 @@
+"""
+pipeline_runner.py
+
+Main controller script for the UK Data Pipeline project.
+Loads, cleans, and inserts user and login data into the database.
+"""
+
+import pandas as pd
+from data_cleaning import *
+from database_setup import create_db, get_session, User, Login
+from datetime import datetime
+
+# File paths
+USER_CSV_PATH = "data/UK User Data.csv"
+LOGIN_CSV_PATH = "data/UK-User-LoginTS.csv"
+DB_PATH = "sqlite:///user_data.db"
+
+
+def load_user_data(filepath):
+    return pd.read_csv(filepath)
+
+
+def load_login_data(filepath):
+    return pd.read_csv(filepath)
+
+
+def process_users(df):
+    users = []
+    for _, row in df.iterrows():
+        uid = generate_uid(row['eMail'])
+
+        dob = clean_dob(row['DoB'], row['Age Last Birthday'])
+
+        user = User(
+            id=uid,
+            first_name=row['First Name'].strip(),
+            middle_initials=clean_middle_initials(row['Middle Initials']),
+            surname=row['Surname'].strip(),
+            dob=datetime.strptime(dob, '%Y-%m-%d').date() if dob else None,
+            gender=clean_gender(row['Gender']),
+            favourite_colour=row['Favourite Colour'],
+            favourite_animal=row['Favourite Animal'],
+            favourite_food=row['Favourite Food'],
+            city=row['City'],
+            county=row['County'],
+            postcode=clean_postcode(row['Postcode']),
+            email=row['eMail'],
+            phone=row['Phone'],
+            mobile=row['Mobile'],
+            rqf=row['RQF'] if pd.notnull(row['RQF']) else None,
+            salary=clean_salary(str(row['Salary'])),
+            password_hash=hash_password(row['Password'])
+        )
+        users.append(user)
+    return users
+
+
+def process_logins(df, email_to_uid_map):
+    logins = []
+    for _, row in df.iterrows():
+        uid = email_to_uid_map.get(row['Username'].strip())
+        if not uid:
+            continue
+        timestamp = convert_epoch_to_iso(row['LoginTS'])
+        if timestamp:
+            login = Login(
+                user_id=uid,
+                login_ts=datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            )
+            logins.append(login)
+    return logins
+
+
+def main():
+    # Set up database
+    engine = create_db(DB_PATH)
+    session = get_session(engine)
+
+    # Load and clean data
+    df_users = load_user_data(USER_CSV_PATH)
+    df_logins = load_login_data(LOGIN_CSV_PATH)
+
+    # Clean and transform user data
+    users = process_users(df_users)
+    email_to_uid = {u.email: u.id for u in users}
+    logins = process_logins(df_logins, email_to_uid)
+
+    # Insert into database
+    session.add_all(users)
+    session.commit()
+
+    session.add_all(logins)
+    session.commit()
+
+    print("Data pipeline executed successfully!")
+
+
+if __name__ == "__main__":
+    main()
