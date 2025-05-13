@@ -10,6 +10,18 @@ import re
 from hashlib import sha256
 from datetime import datetime
 
+def clean_column_names(df):
+    """
+    Clean all columns names so that they:
+     - are lower case
+     - no whitespace
+     - replace spaces with underscores
+    """
+    try:
+        df.columns = [x.lower().strip().replace(' ', '_') for x in df.columns]
+        return df
+    except Exception:
+        return None    
 
 def clean_middle_initials(value):
     """Cleans the middle initials field by removing placeholder values."""

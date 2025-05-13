@@ -28,31 +28,34 @@ def load_csv(filepath, encoding=None):
         return pd.read_csv(filepath, encoding=encoding)
 
 def process_users(df):
+    # clean column headers
+    df = dc.clean_column_names(df)
     users = []
     for _, row in df.iterrows():
-        uid = dc.generate_uid(row['eMail'])
+        
+        uid = dc.generate_uid(row['email'])
 
-        dob = dc.clean_dob(row['DoB'], row['Age Last Birthday'])
+        dob = dc.clean_dob(row['dob'], row['age_last_birthday'])
 
         user = User(
             id=uid,
-            first_name=row['First Name'].strip(),
-            middle_initials=dc.clean_middle_initials(row['Middle Initials']),
-            surname=row['Surname'].strip(),
+            first_name=row['first_name'].strip(),
+            middle_initials=dc.clean_middle_initials(row['middle_initials']),
+            surname=row['surname'].strip(),
             dob=datetime.strptime(dob, '%Y-%m-%d').date() if dob else None,
-            gender=dc.clean_gender(row['Gender']),
-            favourite_colour=row['Favourite Colour'],
-            favourite_animal=row['Favourite Animal'],
-            favourite_food=row['Favourite Food'],
-            city=row['City'],
-            county=row['County'],
-            postcode=dc.clean_postcode(row['Postcode']),
-            email=row['eMail'],
-            phone=row['Phone'],
-            mobile=row['Mobile'],
-            rqf=row['RQF'] if pd.notnull(row['RQF']) else None,
-            salary=dc.clean_salary(str(row['Salary'])),
-            password_hash=dc.hash_password(row['Password'])
+            gender=dc.clean_gender(row['gender']),
+            favourite_colour=row['favourite_colour'],
+            favourite_animal=row['favourite_animal'],
+            favourite_food=row['favourite_food'],
+            city=row['city'],
+            county=row['county'],
+            postcode=dc.clean_postcode(row['postcode']),
+            email=row['email'],
+            phone=row['phone'],
+            mobile=row['mobile'],
+            rqf=row['rqf'] if pd.notnull(row['rqf']) else None,
+            salary=dc.clean_salary(str(row['salary'])),
+            password_hash=dc.hash_password(row['password'])
         )
         users.append(user)
     return users
@@ -60,11 +63,12 @@ def process_users(df):
 
 def process_logins(df, email_to_uid_map):
     logins = []
+    df = dc.clean_column_names(df)
     for _, row in df.iterrows():
-        uid = email_to_uid_map.get(row['Username'].strip())
+        uid = email_to_uid_map.get(row['username'].strip())
         if not uid:
             continue
-        timestamp = dc.convert_epoch_to_iso(row['LoginTS'])
+        timestamp = dc.convert_epoch_to_iso(row['logints'])
         if timestamp:
             login = Login(
                 user_id=uid,
