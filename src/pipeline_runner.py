@@ -9,12 +9,17 @@ import pandas as pd
 import data_cleaning as dc
 from database_setup import create_db, get_session, User, Login
 from datetime import datetime
+import os
 
 # File paths
 USER_CSV_PATH = "data/UK User Data.csv"
 LOGIN_CSV_PATH = "data/UK-User-LoginTS.csv"
 DB_PATH = "sqlite:///databases/user_data.db"
 
+def ensure_directory_exists(directory):
+    """Ensures the directory exists, creating it if necessary."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 def load_csv(filepath, encoding=None):
     if encoding is None:
@@ -70,6 +75,9 @@ def process_logins(df, email_to_uid_map):
 
 
 def main():
+    # Ensure the database directory exists
+    ensure_directory_exists('databases')
+
     # Set up database
     engine = create_db(DB_PATH)
     session = get_session(engine)
