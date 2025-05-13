@@ -38,7 +38,6 @@ class User(Base):
     # Relationship to login entries
     logins = relationship("Login", back_populates="user")
 
-
 # Define the Login audit table
 class Login(Base):
     __tablename__ = 'logins'
