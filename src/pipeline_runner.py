@@ -13,7 +13,7 @@ from datetime import datetime
 # File paths
 USER_CSV_PATH = "data/UK User Data.csv"
 LOGIN_CSV_PATH = "data/UK-User-LoginTS.csv"
-DB_PATH = "sqlite:///user_data.db"
+DB_PATH = "sqlite:///databases/user_data.db"
 
 
 def load_csv(filepath, encoding=None):
@@ -91,7 +91,9 @@ def main():
     session.commit()
 
     print("Data pipeline executed successfully!")
-
+    
+    # Close the session
+    session.close()
 
 if __name__ == "__main__":
     main()

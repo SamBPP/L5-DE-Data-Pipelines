@@ -49,7 +49,7 @@ class Login(Base):
     user = relationship("User", back_populates="logins")
 
 
-def create_db(db_path='sqlite:///uk_user_data.db'):
+def create_db(db_path):
     """Creates the SQLite database and tables."""
     engine = create_engine(db_path)
     Base.metadata.create_all(engine)
